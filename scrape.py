@@ -1,6 +1,7 @@
 import logging
 import argparse
 import json
+import os
 
 import requests
 from bs4 import BeautifulSoup, Comment
