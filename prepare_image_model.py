@@ -7,7 +7,7 @@ import torch
 from torchvision import transforms, datasets
 
 HIERARCHY_DEPTH = 3
-
+VALIDATE = 40
 
 def prepare_imagefolder():
     """Images should be categorized into subdirectories corresponding to labels.
@@ -21,6 +21,9 @@ def prepare_imagefolder():
     TODO remove module from the classification list if we ever re-scrape the data.
     """
 
+    train_count = 0
+    validate_count = 1
+
     for filename in os.listdir('./data'):
         with open(os.path.join(os.getcwd(), 'data', filename)) as json_data:
             data = json.load(json_data)
@@ -29,21 +32,35 @@ def prepare_imagefolder():
                 # images should be duplicated with more specific taxonomic names anyway
                 continue
 
-            directory = os.path.join(os.getcwd(), 'train', hierarchy[HIERARCHY_DEPTH - 1])
-            if not os.path.isdir(directory): os.makedirs(directory)
+            dirs = {}
+            for directory in ['train', 'validate']:
+                dirs[directory] = os.path.join(os.getcwd(), directory, hierarchy[HIERARCHY_DEPTH - 1])
+                if not os.path.isdir(dirs[directory]): os.makedirs(dirs[directory])
+
 
             for images in data['samples']:
                 for thumbnail in images['thumbs']:
                     thumbnail = thumbnail.split('/')[-1]
                     if not thumbnail: continue
-                    shutil.copy(os.path.join(os.getcwd(), 'images', thumbnail),
-                                os.path.join(directory, thumbnail))
+
+                    # sample 1 in every VALIDATE images to use to assess model quality
+                    if (train_count / validate_count) < VALIDATE:
+
+                        shutil.copy(os.path.join(os.getcwd(), 'images', thumbnail),
+                                    os.path.join(dirs['train'], thumbnail))
+                        train_count += 1
+
+                    else:
+                        shutil.copy(os.path.join(os.getcwd(), 'images', thumbnail),
+                                    os.path.join(dirs['validate'], thumbnail))
+                        validate_count += 1
 
 
-def create_dataloader():
+def create_dataloader(directory):
     """Use the structure of the folder created above, with generic ImageLoader, as per
     https://pytorch.org/tutorials/beginner/data_loading_tutorial.html#afterword-torchvision
     """
+    # These Normalize values are boilerplate everywhere, what do they signify?
     data_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -51,7 +68,7 @@ def create_dataloader():
         ])
 
 
-    coccoliths = datasets.ImageFolder(root='train',
+    coccoliths = datasets.ImageFolder(root=directory,
                                       transform=data_transform)
 
     dataset_loader = torch.utils.data.DataLoader(coccoliths,
@@ -63,7 +80,7 @@ def create_dataloader():
 
 if __name__ == '__main__':
     prepare_imagefolder()
-    create_dataloader()
+    create_dataloader('validate')
 
 
 
