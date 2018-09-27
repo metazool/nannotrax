@@ -1,5 +1,6 @@
 import logging
 import argparse
+import json
 
 import requests
 from bs4 import BeautifulSoup, Comment
@@ -9,11 +10,40 @@ logging.basicConfig(level=logging.INFO)
 MIKROTAX = 'http://www.mikrotax.org'
 NANNOTAX = "{}/{}".format(MIKROTAX, 'Nannotax3/index.php')
 
+SEEN_PAGES = {}
 
-def scrape():
-    response = requests.get(NANNOTAX, params={'taxon': 'Thiersteinia', 'module': 'Mesozoic'})
-    with open('test.html', 'wb') as out:
-        out.write(response.content)
+def scrape(module='Mesozoic'):
+    start_here = request_page(module=module, taxon=module)
+    traverse(start_here, module=module, taxon=module)
+
+
+def save_data(data, taxon):
+    """Write the extracted data to a file, guess there will be redundancy"""
+    with open("data/{}.json".format(taxon), 'w') as out:
+        out.write(json.dumps(data))
+
+
+def traverse(page, module=None, taxon=None):
+    """Recursively try to follow all the taxonomic links from a given page"""
+    data = extract_data(page)
+    if not data:
+        return None
+
+    save_data(data, taxon)
+    for sample in data['samples']:
+        if sample['taxon'] not in SEEN_PAGES:
+            new_page = request_page(module=module, taxon=sample['taxon'])
+            SEEN_PAGES[sample['taxon']] = 1
+            traverse(new_page, module=module, taxon=sample['taxon'])
+
+    logging.info('seen everything')
+
+
+def request_page(module=None, taxon=None):
+    logging.info(taxon)
+    response = requests.get(NANNOTAX, params={'taxon': taxon, 'module': module})
+    response.raise_for_status()
+    return response.content
 
 
 def extract_data(html):
@@ -22,6 +52,11 @@ def extract_data(html):
     logging.info(soup.find('title').text)
     hierarchy = hierarchy_summary(soup)
     samples = daughter_taxa(soup)
+    if not samples:
+        return None
+
+    return {'hierarchy': hierarchy,
+            'samples': samples }
 
 
 def hierarchy_summary(soup):
@@ -53,6 +88,8 @@ def daughter_taxa(soup):
 
     table = soup.find('table')
     rows = table.find_all('tr')
+    if not rows:
+        return None
 
     for row in rows[1:-1]:  # skip the first row
         thumbs = []
@@ -75,5 +112,6 @@ def daughter_taxa(soup):
 
 
 if __name__ == '__main__':
-    #scrape()
-    extract_data(open('test/fixtures/mesozoic.html').read())
+
+    scrape()
+    #extract_data(open('test/fixtures/mesozoic.html').read())
