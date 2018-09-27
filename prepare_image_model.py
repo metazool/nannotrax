@@ -56,12 +56,15 @@ def prepare_imagefolder():
                         validate_count += 1
 
 
-def create_dataloader(directory):
+def create_imagefolder(directory):
     """Use the structure of the folder created above, with generic ImageLoader, as per
     https://pytorch.org/tutorials/beginner/data_loading_tutorial.html#afterword-torchvision
     """
+
     # These Normalize values are boilerplate everywhere, what do they signify?
+    # The 224 size is to coerce ResNet into working, but sources are all 120
     data_transform = transforms.Compose([
+            transforms.Resize(224),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -71,7 +74,13 @@ def create_dataloader(directory):
     coccoliths = datasets.ImageFolder(root=directory,
                                       transform=data_transform)
 
-    dataset_loader = torch.utils.data.DataLoader(coccoliths,
+    return coccoliths
+
+
+def create_dataloader(imagefolder):
+
+    """Separate interface as we get the classnames from this interface"""
+    dataset_loader = torch.utils.data.DataLoader(imagefolder,
                                                  batch_size=4, shuffle=True,
                                                  num_workers=4)
 
