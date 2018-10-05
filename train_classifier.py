@@ -6,14 +6,18 @@ import copy
 
 import torch
 import torch.nn as nn
+from VGG import vgg_custom
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import numpy as np
 import torchvision
 from torchvision import datasets, models, transforms
-
 from prepare_image_model import create_dataloader, create_imagefolder
 
+EPOCHS=50
+LEARN_RATE=0.0001
+MOMENTUM=0.5
+INPUT_SIZE=(120, 120)
 
 image_datasets = {x: create_imagefolder(x) for x in ['train', 'validate']}
 
@@ -93,24 +97,27 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=15):
     return model
 
 
-def create_model():
-    model_ft = models.resnet18()
+def initialise_model(size=120):
+    """Create an empty VGG model with custom AvgPool to avoid 224x224 limit"""
+    model = vgg_custom(num_classes=21)
 
+    return model
+
+
+def build_model(model_ft, epochs=EPOCHS):
+    """Run the training regime on the model and save its best effort"""
     criterion = nn.CrossEntropyLoss()
-
-    # Observe that all parameters are being optimized
-    optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
+    optimizer_ft = optim.SGD(model_ft.parameters(), lr=LEARN_RATE, momentum=MOMENTUM)
 
     # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
     model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
-                       num_epochs=15)
-
+                       num_epochs=epochs)
 
     torch.save(model_ft, os.path.join(os.getcwd(),'model'))
 
 
 if __name__ == '__main__':
-    create_model()
+    build_model(initialise_model())
 

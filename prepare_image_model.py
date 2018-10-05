@@ -1,13 +1,22 @@
 import os
 import shutil
 import json
+import random
+import logging
 
 from PIL import Image, ImageOps
 import torch
 from torchvision import transforms, datasets
 
+logging.basicConfig(level=logging.DEBUG)
 HIERARCHY_DEPTH = 3
-VALIDATE = 40
+DATASETS = ['validate','testing','train','train','train']
+
+BATCH_SIZE=20
+
+def allocate_dataset():
+    select = random.randrange(0, 4)
+    return DATASETS[select]
 
 def prepare_imagefolder():
     """Images should be categorized into subdirectories corresponding to labels.
@@ -24,36 +33,39 @@ def prepare_imagefolder():
     train_count = 0
     validate_count = 1
 
+    class_images = {}
+
     for filename in os.listdir('./data'):
         with open(os.path.join(os.getcwd(), 'data', filename)) as json_data:
             data = json.load(json_data)
+
             hierarchy = data['hierarchy']
+
             if len(hierarchy) < HIERARCHY_DEPTH:
                 # images should be duplicated with more specific taxonomic names anyway
                 continue
 
-            dirs = {}
-            for directory in ['train', 'validate']:
-                dirs[directory] = os.path.join(os.getcwd(), directory, hierarchy[HIERARCHY_DEPTH - 1])
-                if not os.path.isdir(dirs[directory]): os.makedirs(dirs[directory])
+            classname =  hierarchy[HIERARCHY_DEPTH - 1]
 
+            for directory in ['train', 'validate', 'testing']:
+                directory = os.path.join(os.getcwd(), directory, classname)
+                if not os.path.isdir(directory): os.makedirs(directory)
+
+            class_images[classname] = []
 
             for images in data['samples']:
                 for thumbnail in images['thumbs']:
                     thumbnail = thumbnail.split('/')[-1]
                     if not thumbnail: continue
+                    class_images[classname].append(thumbnail)
 
-                    # sample 1 in every VALIDATE images to use to assess model quality
-                    if (train_count / validate_count) < VALIDATE:
-
-                        shutil.copy(os.path.join(os.getcwd(), 'images', thumbnail),
-                                    os.path.join(dirs['train'], thumbnail))
-                        train_count += 1
-
-                    else:
-                        shutil.copy(os.path.join(os.getcwd(), 'images', thumbnail),
-                                    os.path.join(dirs['validate'], thumbnail))
-                        validate_count += 1
+    for class_ in class_images:
+        # Split between testing, training and validation
+        for image in class_images[class_]:
+            dataset = allocate_dataset()
+            dest = os.path.join(os.getcwd(), dataset, class_, image)
+            logging.debug(dest)
+            shutil.copy(os.path.join(os.getcwd(), 'images', image), dest)
 
 
 def create_imagefolder(directory):
@@ -64,7 +76,7 @@ def create_imagefolder(directory):
     # These Normalize values are boilerplate everywhere, what do they signify?
     # The 224 size is to coerce ResNet into working, but sources are all 120
     data_transform = transforms.Compose([
-            transforms.Resize(224),
+            #transforms.Resize(224),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -81,16 +93,13 @@ def create_dataloader(imagefolder):
 
     """Separate interface as we get the classnames from this interface"""
     dataset_loader = torch.utils.data.DataLoader(imagefolder,
-                                                 batch_size=4, shuffle=True,
-                                                 num_workers=4)
+                                                 batch_size=BATCH_SIZE, 
+                                                 shuffle=True)#,
+                                                 #drop_last=True)
+                                                 #num_workers=4)
 
     return dataset_loader
 
 
 if __name__ == '__main__':
     prepare_imagefolder()
-    create_dataloader('validate')
-
-
-
-
