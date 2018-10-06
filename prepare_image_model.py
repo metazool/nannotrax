@@ -10,15 +10,15 @@ from torchvision import transforms, datasets
 
 logging.basicConfig(level=logging.DEBUG)
 HIERARCHY_DEPTH = 3
-DATASETS = ['validate','testing','train','train','train']
+DATASETS = ['validate','train','train','train','train']
 
-BATCH_SIZE=20
+BATCH_SIZE=16
 
 def allocate_dataset():
     select = random.randrange(0, 4)
     return DATASETS[select]
 
-def prepare_imagefolder():
+def prepare_imagefolder(add_fuzz=0):
     """Images should be categorized into subdirectories corresponding to labels.
     Finding out how narrowly we can classify the taxonomy will be trial and error
     We make a copy of them, sorted into directories for use with ImageLoader.
@@ -47,11 +47,12 @@ def prepare_imagefolder():
 
             classname =  hierarchy[HIERARCHY_DEPTH - 1]
 
-            for directory in ['train', 'validate', 'testing']:
+            for directory in ['train', 'validate']:#, 'testing']:
                 directory = os.path.join(os.getcwd(), directory, classname)
                 if not os.path.isdir(directory): os.makedirs(directory)
 
-            class_images[classname] = []
+            if classname not in class_images:
+                class_images[classname] = []
 
             for images in data['samples']:
                 for thumbnail in images['thumbs']:
@@ -60,6 +61,7 @@ def prepare_imagefolder():
                     class_images[classname].append(thumbnail)
 
     for class_ in class_images:
+        logging.debug(f'{class_}: {len(class_images[class_])}')
         # Split between testing, training and validation
         for image in class_images[class_]:
             dataset = allocate_dataset()
