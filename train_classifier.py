@@ -3,10 +3,14 @@
 import time
 import os
 import copy
+import argparse
+import os
+import logging
 
 import torch
 import torch.nn as nn
 from VGG import vgg_custom
+from SimpleCNN import simple_cnn
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import numpy as np
@@ -14,23 +18,31 @@ import torchvision
 from torchvision import datasets, models, transforms
 from prepare_image_model import create_dataloader, create_imagefolder
 
-EPOCHS=50
-LEARN_RATE=0.0001
-MOMENTUM=0.5
+EPOCHS=500
+LEARN_RATE=0.001
+MOMENTUM=0.9
 INPUT_SIZE=(120, 120)
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-image_datasets = {x: create_imagefolder(x) for x in ['train', 'validate']}
+def prepare_data(directory=None):
+    path = [os.getcwd()]
 
-dataloaders = {x: create_dataloader(image_datasets[x]) for x in ['train', 'validate']}
+    if directory:
+        path.append(directory)
 
-dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'validate']}
+    dirs = {
+        'train': os.path.join(*path, 'train'),
+        'validate': os.path.join(*path, 'validate')}
 
-class_names = image_datasets['train'].classes
+    images = {x: create_imagefolder(dirs[x]) for x in ['train', 'validate']}
+    data = {x: create_dataloader(images[x]) for x in ['train', 'validate']}
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    return (images, data)
 
+def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epochs=15):
 
-def train_model(model, criterion, optimizer, scheduler, num_epochs=15):
+    dataset_sizes = {x: len(images[x]) for x in ['train', 'validate']}
+
     since = time.time()
 
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -53,9 +65,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=15):
 
             # Iterate over data.
 
-            for inputs, labels in dataloaders[phase]:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+            for inputs, labels in datasets[phase]:
+                inputs = inputs.to(DEVICE)
+                labels = labels.to(DEVICE)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -97,27 +109,42 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=15):
     return model
 
 
-def initialise_model(size=120):
-    """Create an empty VGG model with custom AvgPool to avoid 224x224 limit"""
-    model = vgg_custom(num_classes=21)
+def initialise_model(images):
+    """Create an empty model - TODO specify num_classes from datset
+    models.vgg11 =
+    vgg_custom - VGG with custom AvgPool to avoid 224x224 limiti
+    simple_cnn - simplest thing that might possibly work"""
+    classes = len(images['train'].classes)
+    logging.info(f'training model with {classes} classes')
+    model = models.vgg11(num_classes=classes)
 
     return model
 
 
-def build_model(model_ft, epochs=EPOCHS):
+def build_model(images, datasets, epochs=EPOCHS):
     """Run the training regime on the model and save its best effort"""
+    model_ft = initialise_model(images)
     criterion = nn.CrossEntropyLoss()
     optimizer_ft = optim.SGD(model_ft.parameters(), lr=LEARN_RATE, momentum=MOMENTUM)
 
     # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
-    model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
+    model_ft = train_model(model_ft, images, datasets, criterion, optimizer_ft, exp_lr_scheduler,
                        num_epochs=epochs)
 
     torch.save(model_ft, os.path.join(os.getcwd(),'model'))
 
 
 if __name__ == '__main__':
-    build_model(initialise_model())
+
+    parser = argparse.ArgumentParser(
+        description="Train a model based on contents of a directory")
+    parser.add_argument(
+        '--directory',
+        help="Path of a directory on this host")
+
+    args = parser.parse_args()
+    images, datasets = prepare_data(directory=args.directory)
+    build_model(images, datasets)
 
