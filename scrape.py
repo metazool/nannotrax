@@ -18,9 +18,11 @@ def scrape(module='Mesozoic'):
     traverse(start_here, module=module, taxon=module)
 
 
-def save_data(data, taxon):
+def save_data(data, module, taxon):
+    directory = os.path.join(os.getcwd(), 'data', module)
+    if not os.path.isdir(directory): os.makedirs(directory)
     """Write the extracted data to a file, guess there will be redundancy"""
-    with open("data/{}.json".format(taxon), 'w') as out:
+    with open(os.path.join(directory, f'{taxon}.json'), 'w') as out:
         out.write(json.dumps(data))
 
 
@@ -30,7 +32,7 @@ def traverse(page, module=None, taxon=None):
     if not data:
         return None
 
-    save_data(data, taxon)
+    save_data(data, module, taxon)
     for sample in data['samples']:
         if sample['taxon'] not in SEEN_PAGES:
             new_page = request_page(module=module, taxon=sample['taxon'])
@@ -114,5 +116,5 @@ def daughter_taxa(soup):
 
 if __name__ == '__main__':
 
-    scrape()
+    scrape(module='Coccolithophores')
     #extract_data(open('test/fixtures/mesozoic.html').read())
