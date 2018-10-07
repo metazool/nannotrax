@@ -18,7 +18,7 @@ The validation accuracy not changing is awkward as this is used to save the mode
 
 While preparing to add Tensorboard logging for a tiny set we realise that the batch_size is set to smaller than the size of the validation set (which was just one image for 2 training images). Refactored the preparation code a bit to select the tiny training set more randomly, not sure whether to set the batch size automatically from a ratio of the dataset size. And now this training run is looking A LOT healthier, training loss is not 0 but is hovering around 0.001. The validation loss dropped consistently for the first few runs, then rose to stick at one value with 0.75 accuracy. This is progress.
 
-
+Got Tensorboard logging setup, showing the training images ok, no idea how to interpret the state of the histograms and distributions. Optimistically running the current setup against all the Cenozoic coccolith images split across 9 classes. Set the log steps back down to 100 and the batch size up to 4. Looking at the code again i appear to be logging both training and validation and not at all sure this is correct. I am feeling too lazy to read Tensorboard tutorials though.
 
 
 
