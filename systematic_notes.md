@@ -10,6 +10,12 @@ At this stage the validation loss/accuracy is never changing over 50 epochs.
 
 We put the learn rate back up from the 0.0001 that Alex suggested to the default 0.001 and the momentum value (?) to the default 0.9. Epochs are running fast so let's try 500, it's only hardware, and prepare some food.
 
+We let it run for 500 epochs but the training loss fluctuates at a high value and validation loss is constant. The advice about training a very small sample set to 0 isnt clear but the received wisdom is that one needs 1000 samples per class to train VGG from scratch so next step before getting out Tensorboard is to try this on a pre-trained network.
+
+After this stage we notice that a) the validation loss is never changing over iterations and the training loss is hovering around over up to a few hundred epochs and never showing a consistent downward trend b) the samples may be a poor fit as the two classes were selected from 27 (looking 2 levels down the navigation hierarchy for the taxonomy) and to the untrained eye they look very similar. So before moving on we will lower the hierarchy depth and have more distinct samples (currently 2 for training and 1 for validation)
+
+The validation accuracy not changing is awkward as this is used to save the model so i think the current logic means we always end up saving the model from the first epoch. One run out of a few got 1.0 accuracy but this was likely a lucky guess, but that probably justifies poking around with Tensorboard. (We looked briefly into the Crayon setup but it looks overengineered for our purposes)
+
 
 
 

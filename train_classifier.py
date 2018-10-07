@@ -9,8 +9,8 @@ import logging
 
 import torch
 import torch.nn as nn
-from VGG import vgg_custom
-from SimpleCNN import simple_cnn
+#from VGG import vgg_custom
+#from SimpleCNN import simple_cnn
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import numpy as np
@@ -18,10 +18,11 @@ import torchvision
 from torchvision import datasets, models, transforms
 from prepare_image_model import create_dataloader, create_imagefolder
 
-EPOCHS=500
+logging.basicConfig(level=logging.DEBUG)
+
+EPOCHS=100
 LEARN_RATE=0.001
 MOMENTUM=0.9
-INPUT_SIZE=(120, 120)
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def prepare_data(directory=None):
@@ -66,6 +67,7 @@ def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epo
             # Iterate over data.
 
             for inputs, labels in datasets[phase]:
+                logging.debug(labels)
                 inputs = inputs.to(DEVICE)
                 labels = labels.to(DEVICE)
 
@@ -115,8 +117,17 @@ def initialise_model(images):
     vgg_custom - VGG with custom AvgPool to avoid 224x224 limiti
     simple_cnn - simplest thing that might possibly work"""
     classes = len(images['train'].classes)
+
     logging.info(f'training model with {classes} classes')
-    model = models.vgg11(num_classes=classes)
+
+    # Try resetting the last fully connectted layer on a pre-trained VGG11
+    model = models.vgg11(pretrained=True) #num_classes=classes, pretrained=True)
+
+    # VGG specific logic, last layer in  self.classifier
+    num_ftrs = model.classifier[-1].in_features
+    model.classifier[-1] = nn.Linear(num_ftrs, classes)
+
+    model = model.to(DEVICE)
 
     return model
 

@@ -12,7 +12,7 @@ from torchvision import transforms, datasets
 logging.basicConfig(level=logging.DEBUG)
 
 # Consider adpting this to subset bigger categories and merge smaller ones
-HIERARCHY_DEPTH = 3 
+HIERARCHY_DEPTH = 3
 DATASETS = ['validate','train','train','train','train']
 DATA_DIR = os.path.join(os.getcwd(), 'data')
 IMAGE_DIR = os.path.join(os.getcwd(), 'images')
@@ -43,11 +43,13 @@ def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0):
     class_images = {}
 
     for filename in os.listdir(DATA_DIR):
+
+        if not os.path.isfile(os.path.join(DATA_DIR, filename)): continue
+
         with open(os.path.join(DATA_DIR, filename)) as json_data:
             data = json.load(json_data)
 
             hierarchy = data['hierarchy']
-
             if len(hierarchy) < HIERARCHY_DEPTH:
                 # images should be duplicated with more specific taxonomic names anyway
                 continue
@@ -74,12 +76,17 @@ def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0):
             directory = os.path.join(TRAIN_DIR, directory, class_)
             if not os.path.isdir(directory): os.makedirs(directory)
 
-        logging.debug(f'{class_}: {len(class_images[class_])}')
+        logging.info(f'{class_}: {len(class_images[class_])}')
         # Split between testing, training and validation
 
         for image in class_images[class_]:
+
             if limit_samples and samples >= limit_samples:
                 break
+
+            # Some images are ultrastructure diagrams, skip these by filename
+            if 'fig' in image:
+                continue
 
             if add_fuzz:
                 # try Vyron's suggestion of altered copies to bulk out dataset
@@ -159,6 +166,10 @@ if __name__ == '__main__':
         '--sample_limit',
         type=int,
         help="limit to this number of samples per class")
+    parser.add_argument(
+        '--depth',
+        type=int,
+        help="How far to look down the class hierarchy. Lower number -> samples will be more distinct")
 
     args = parser.parse_args()
     if args.data:
@@ -167,6 +178,8 @@ if __name__ == '__main__':
         IMAGE_DIR=os.path.join(os.getcwd(), args.images, 'images')
     if args.train:
         TRAIN_DIR=os.path.join(os.getcwd(), args.train)
+    if args.depth:
+        HIERARCHY_DEPTH=args.depth
 
     prepare_imagefolder(limit_classes=args.class_limit,
                         limit_samples=args.sample_limit)
