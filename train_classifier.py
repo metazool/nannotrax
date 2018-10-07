@@ -95,9 +95,9 @@ def train_model(model, images, datasets, criterion, optimizer, scheduler, num_ep
                 optimizer.step()
                 if log:
                     step_count += 1
-                    if (step_count+1) % 10 == 0:
+                    if (step_count+1) % 5 == 0:
+                        images = []
                         images, _ = next(iter(datasets[phase]))
-
                         tensorboard_logging(step_count, model, images, running_loss, running_corrects.double())
 
             epoch_loss = running_loss / dataset_sizes[phase]
@@ -137,7 +137,7 @@ def tensorboard_logging(step=None, model=None, images=None, loss=None, accuracy=
         LOGGER.histo_summary(tag+'/grad', value.grad.data.cpu().numpy(), step+1)
 
     # 3. Log training images (image summary)
-    info = { 'images': images.view(-1, 28, 28)[:10].cpu().numpy() }
+    info = { 'images': images.view(-1, 224, 224)[:10].cpu().numpy() }
 
     for tag, images in info.items():
         LOGGER.image_summary(tag, images, step+1)
