@@ -40,7 +40,7 @@ def prepare_data(directory=None):
 
     return (images, data)
 
-def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epochs=15):
+def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epochs=15, log=False):
 
     dataset_sizes = {x: len(images[x]) for x in ['train', 'validate']}
 
@@ -48,6 +48,8 @@ def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epo
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
+
+    step_count = 0
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -85,7 +87,12 @@ def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epo
                     if phase == 'train':
                         loss.backward()
 
- # statistics
+                # Sttempting to add Tensorboard logging her
+
+                optimizer.step()
+                if log:
+                    step_count += 1
+
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 

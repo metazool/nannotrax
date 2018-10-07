@@ -65,24 +65,30 @@ def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0):
                     if not thumbnail: continue
                     class_images[classname].append(thumbnail)
 
-    classes = 0
+
+    if limit_classes:
+        while len(class_images) > limit_classes:
+            del class_images[random.choice(list(class_images.keys()))]
 
     for class_ in class_images:
-        samples = 0
-        if limit_classes and classes >= limit_classes:
-            break
 
+        images = class_images[class_]
+        # create a directory for this class if needed
         for directory in ['train', 'validate']:#, 'testing']:
             directory = os.path.join(TRAIN_DIR, directory, class_)
             if not os.path.isdir(directory): os.makedirs(directory)
 
+        # Some images are ultrastructure diagrams, skip these by filename
+        images = list(filter(lambda x: 'fig' not in x, images))
+
+        if limit_samples:
+            while len(images) > limit_samples:
+                images.pop(random.randint(0,len(images)-1))
+
         logging.info(f'{class_}: {len(class_images[class_])}')
         # Split between testing, training and validation
 
-        for image in class_images[class_]:
-
-            if limit_samples and samples >= limit_samples:
-                break
+        for image in images:
 
             # Some images are ultrastructure diagrams, skip these by filename
             if 'fig' in image:
@@ -90,13 +96,11 @@ def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0):
 
             if add_fuzz:
                 # try Vyron's suggestion of altered copies to bulk out dataset
-                variants = fuzzed_images(images, add_fuzz)
+                variants = fuzzed_images(image, add_fuzz)
                 for v in variants: copy_image(v, class_)
 
             copy_image(image, class_)
-            samples += 1
 
-        classes += 1
 
 
 def copy_image(filename, label_dir):
