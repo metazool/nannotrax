@@ -21,7 +21,8 @@ from logger import Logger
 
 logging.basicConfig(level=logging.DEBUG)
 
-EPOCHS=100
+LOG_STEPS=100
+EPOCHS=42
 LEARN_RATE=0.001
 MOMENTUM=0.9
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -95,7 +96,7 @@ def train_model(model, images, datasets, criterion, optimizer, scheduler, num_ep
                 optimizer.step()
                 if log:
                     step_count += 1
-                    if (step_count+1) % 5 == 0:
+                    if (step_count+1) % LOG_STEPS == 0:
                         images = []
                         images, _ = next(iter(datasets[phase]))
                         tensorboard_logging(step_count, model, images, running_loss, running_corrects.double())

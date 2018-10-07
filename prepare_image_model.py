@@ -17,7 +17,7 @@ DATASETS = ['validate','train','train','train','train']
 DATA_DIR = os.path.join(os.getcwd(), 'data')
 IMAGE_DIR = os.path.join(os.getcwd(), 'images')
 TRAIN_DIR = os.getcwd()
-BATCH_SIZE=2
+BATCH_SIZE=4
 
 
 def allocate_dataset():
