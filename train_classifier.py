@@ -42,7 +42,7 @@ def prepare_data(directory=None):
 
     return (images, data)
 
-def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epochs=15, log=False):
+def train_model(model, images, datasets, criterion, optimizer, scheduler, num_epochs=15, log=False):
 
     dataset_sizes = {x: len(images[x]) for x in ['train', 'validate']}
 
@@ -95,7 +95,10 @@ def train_model(model, images, datsets, criterion, optimizer, scheduler, num_epo
                 optimizer.step()
                 if log:
                     step_count += 1
-                    tensorboard_logging(step_count, model, inputs, running_loss, running_corrects.double())
+                    if (step_count+1) % 10 == 0:
+                        images, _ = next(iter(datasets[phase]))
+
+                        tensorboard_logging(step_count, model, images, running_loss, running_corrects.double())
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
