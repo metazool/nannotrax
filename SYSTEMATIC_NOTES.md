@@ -20,7 +20,7 @@ While preparing to add Tensorboard logging for a tiny set we realise that the ba
 
 Got Tensorboard logging setup, showing the training images ok, no idea how to interpret the state of the histograms and distributions. Optimistically running the current setup against all the Cenozoic coccolith images split across 9 classes. Set the log steps back down to 100 and the batch size up to 4. Looking at the code again i appear to be logging both training and validation and not at all sure this is correct. I am feeling too lazy to read Tensorboard tutorials though.
 
-
+Hoped the 42-epoch test run would finish overnight but still 2/3 of the way through after running for a bit over 12 hours on a CPU :/ Looking back at the loss/accuracy history and the Tensorboard output its performance seems to have topped out at epoch 15. Validation accuracy appears stable at 0.7725 since then. We only save the best candidate model at the end of the run and should do that more incrementally in future. A GPU is needed now really.
 
 
 
