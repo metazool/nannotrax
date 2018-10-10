@@ -22,7 +22,7 @@ from logger import Logger
 logging.basicConfig(level=logging.DEBUG)
 
 LOG_STEPS=100
-EPOCHS=42
+EPOCHS=16
 LEARN_RATE=0.001
 MOMENTUM=0.9
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
