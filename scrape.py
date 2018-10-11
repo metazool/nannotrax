@@ -91,8 +91,13 @@ def daughter_taxa(soup):
 
     table = soup.find('table')
     rows = table.find_all('tr')
+
     if not rows:
         return None
+
+    # If ttable is just tags, this is an individual taxon
+    if 'Tags' in rows[0].find('td').text:
+        return taxon_samples(soup)
 
     for row in rows[1:-1]:  # skip the first row
         thumbs = []
@@ -114,7 +119,25 @@ def daughter_taxa(soup):
     return taxa
 
 
+def taxon_samples(soup):
+    """Extract sample images for an individual taxon"""
+    images = soup.find_all('img')
+    thumbs = []
+
+    for img in images:
+
+        src = img['src']
+        if 'thumbs' in src:
+            thumbs.append(f'{MIKROTAX}{src}')
+
+
+    taxon = soup.find('h2').text
+    logging.debug([{'taxon': taxon, 'thumbs': thumbs }])
+    return [{'taxon': taxon, 'thumbs': thumbs }]
+
+
 if __name__ == '__main__':
 
     scrape(module='Coccolithophores')
     #extract_data(open('test/fixtures/mesozoic.html').read())
+    #print(extract_data(open('test/fixtures/Syracosphaera-azureaplaneta.html').read()))
