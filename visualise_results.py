@@ -47,14 +47,15 @@ def visualise_model(model, num_images=12, directory='validate'):
 
             print(images_so_far)
             if images_so_far >= num_images-1:
+                plt.tight_layout()
                 plt.savefig('test.png')
                 return
 
             for j in range(inputs.size()[0]):
                 images_so_far += 1
-                ax = plt.subplot(num_images//2, 2, images_so_far)
+                ax = plt.subplot(num_images//4, 4, images_so_far)
                 ax.axis('off')
-                ax.set_title('predicted: {}'.format(class_names[preds[j]]))
+                ax.set_title('predicted: {} \n actual: {}'.format(class_names[preds[j]], class_names[labels[j]]), fontsize=8)
                 imshow(inputs.cpu().data[j])
 
 
