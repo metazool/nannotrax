@@ -6,7 +6,7 @@ import os
 import requests
 from bs4 import BeautifulSoup, Comment
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 MIKROTAX = 'http://www.mikrotax.org'
 NANNOTAX = "{}/{}".format(MIKROTAX, 'Nannotax3/index.php')
@@ -91,7 +91,6 @@ def daughter_taxa(soup):
 
     table = soup.find('table')
     rows = table.find_all('tr')
-    logging.debug(rows)
 
     if not rows:
         return None
@@ -128,7 +127,6 @@ def taxon_samples(soup):
     for img in images:
 
         src = img['src']
-        logging.debug(src)
         if 'thumbs' in src:
             thumbs.append(f'{MIKROTAX}{src}')
 
