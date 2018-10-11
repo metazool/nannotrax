@@ -9,6 +9,7 @@ Pytorch is used to train a neural net to recognise different classes of coccolit
 On the excellent advice of Simon Cozens there is now also a rambling set of systematic notes describing what changes are being made in response to what behaviours of the neural net / observations about the training data.
 
 ![Results of first training run with 9 high level categories of Coccoliths](test.png)
+_Figure: Unrepresentatively good results of a test run with 9 classifications of coccolith families, averaging 75% model accuracy_
 
 ## Overview
 

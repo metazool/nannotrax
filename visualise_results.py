@@ -29,7 +29,6 @@ def imshow(inp, title=None):
 
 
 def visualise_model(model, num_images=12, directory='validate'):
-    was_training = model.training
     model.eval()
     images_so_far = 0
     fig = plt.figure()
