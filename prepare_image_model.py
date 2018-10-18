@@ -108,9 +108,12 @@ def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0, depth=None
 def copy_image(filename, label_dir):
     """Copy source to labelled directory, randomly allocated to validation or training"""
     dataset = allocate_dataset()
+    source = os.path.join(IMAGE_DIR, filename)
     dest = os.path.join(TRAIN_DIR, dataset, label_dir, filename)
+    if not os.path.isfile(source):
+        return
     logging.debug(dest)
-    shutil.copy(os.path.join(IMAGE_DIR, filename), dest)
+    shutil.copy(source, dest)
 
 
 def fuzzed_image(filename, num_variants):
