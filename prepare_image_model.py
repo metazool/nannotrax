@@ -9,7 +9,7 @@ from PIL import Image, ImageOps
 import torch
 from torchvision import transforms, datasets
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Consider adpting this to subset bigger categories and merge smaller ones
 HIERARCHY_DEPTH = 3
@@ -25,7 +25,7 @@ def allocate_dataset():
     return DATASETS[select]
 
 
-def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0):
+def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0, depth=None):
     """Images should be categorized into subdirectories corresponding to labels.
     Finding out how narrowly we can classify the taxonomy will be trial and error
     We make a copy of them, sorted into directories for use with ImageLoader.
@@ -39,6 +39,8 @@ def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0):
 
     train_count = 0
     validate_count = 1
+    if not depth:
+        depth = HIERARCHY_DEPTH
 
     class_images = {}
 
@@ -50,11 +52,11 @@ def prepare_imagefolder(add_fuzz=0, limit_classes=0, limit_samples=0):
             data = json.load(json_data)
 
             hierarchy = data['hierarchy']
-            if len(hierarchy) < HIERARCHY_DEPTH:
+            if len(hierarchy) < depth:
                 # images should be duplicated with more specific taxonomic names anyway
                 continue
 
-            classname =  hierarchy[HIERARCHY_DEPTH - 1]
+            classname =  hierarchy[depth - 1]
 
             if classname not in class_images:
                 class_images[classname] = []
