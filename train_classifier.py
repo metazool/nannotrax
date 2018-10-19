@@ -144,30 +144,41 @@ def tensorboard_logging(step=None, model=None, images=None, loss=None, accuracy=
         LOGGER.image_summary(tag, images, step+1)
 
 
-def initialise_model(images):
+def initialise_model(images, use_model=None, pretrained=True):
     """Create an empty model - TODO specify num_classes from datset
-    models.vgg11 =
+    models.vgg11 - default
     vgg_custom - VGG with custom AvgPool to avoid 224x224 limiti
-    simple_cnn - simplest thing that might possibly work"""
+    simple_cnn - simplest thing that might possibly work
+    use_model - if supplied, look for this string as a method on
+      torchvision.models, likely will break on non-VGG setups
+    """
     classes = len(images['train'].classes)
 
     logging.info(f'training model with {classes} classes')
+    
+    params = {'pretrained': pretrained}
+    if not pretrained:
+        params['num_classes'] = classes
 
-    # Try resetting the last fully connectted layer on a pre-trained VGG11
-    model = models.vgg11(pretrained=True) #num_classes=classes, pretrained=True)
-
+    if use_model:
+        model = getattr(models, use_model)(**params)
+    else:
+        model = models.vgg11(**params) 
+       
+    # Reset the last fully connectted layer on a pre-trained VGG* 
     # VGG specific logic, last layer in  self.classifier
-    num_ftrs = model.classifier[-1].in_features
-    model.classifier[-1] = nn.Linear(num_ftrs, classes)
+    if not pretrained:
+        num_ftrs = model.classifier[-1].in_features
+        model.classifier[-1] = nn.Linear(num_ftrs, classes)
 
     model = model.to(DEVICE)
 
     return model
 
 
-def build_model(images, datasets, epochs=EPOCHS, log=False):
+def build_model(images, datasets, epochs=EPOCHS, log=False, use_model=None, save_model='model', pretrained=True):
     """Run the training regime on the model and save its best effort"""
-    model_ft = initialise_model(images)
+    model_ft = initialise_model(images, use_model=use_model, pretrained=pretrained)
     criterion = nn.CrossEntropyLoss()
     optimizer_ft = optim.SGD(model_ft.parameters(), lr=LEARN_RATE, momentum=MOMENTUM)
 
@@ -176,7 +187,7 @@ def build_model(images, datasets, epochs=EPOCHS, log=False):
 
     model_ft = train_model(model_ft, images, datasets, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=epochs, log=log)
 
-    torch.save(model_ft, os.path.join(os.getcwd(),'model'))
+    torch.save(model_ft, os.path.join(os.getcwd(), save_model))
 
 
 if __name__ == '__main__':
