@@ -178,7 +178,7 @@ def initialise_model(images, use_model=None, pretrained=True):
 
 def build_model(images, datasets, epochs=None, log=False, use_model=None, save_model='model', pretrained=True):
     """Run the training regime on the model and save its best effort"""
-    nun_epochs = epochs 
+    num_epochs = epochs 
     if not num_epochs: num_epochs = EPOCHS
         
     model_ft = initialise_model(images, use_model=use_model, pretrained=pretrained)
