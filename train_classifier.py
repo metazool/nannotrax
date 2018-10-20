@@ -176,8 +176,11 @@ def initialise_model(images, use_model=None, pretrained=True):
     return model
 
 
-def build_model(images, datasets, epochs=EPOCHS, log=False, use_model=None, save_model='model', pretrained=True):
+def build_model(images, datasets, epochs=None, log=False, use_model=None, save_model='model', pretrained=True):
     """Run the training regime on the model and save its best effort"""
+    nun_epochs = epochs 
+    if not num_epochs: num_epochs = EPOCHS
+        
     model_ft = initialise_model(images, use_model=use_model, pretrained=pretrained)
     criterion = nn.CrossEntropyLoss()
     optimizer_ft = optim.SGD(model_ft.parameters(), lr=LEARN_RATE, momentum=MOMENTUM)
@@ -185,7 +188,7 @@ def build_model(images, datasets, epochs=EPOCHS, log=False, use_model=None, save
     # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
 
-    model_ft = train_model(model_ft, images, datasets, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=epochs, log=log)
+    model_ft = train_model(model_ft, images, datasets, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=num_epochs, log=log)
 
     torch.save(model_ft, os.path.join(os.getcwd(), save_model))
 
