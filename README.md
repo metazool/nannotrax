@@ -9,7 +9,12 @@ Pytorch is used to train a neural net to recognise different classes of coccolit
 On the excellent advice of Simon Cozens there is now also a rambling set of systematic notes describing what changes are being made in response to what behaviours of the neural net / observations about the training data.
 
 ![Results of first training run with 9 high level categories of Coccoliths](test.png)
+
 _Figure: Unrepresentatively good results of a test run with 9 classifications of coccolith families, averaging 75% model accuracy_
+
+![Results of a later training run with 96 classes of Coccolithophores](test-1.png)
+
+_Figure: More representative results of a later run with 96 classifications at around 80% model accuracy_
 
 ## Overview
 
@@ -78,5 +83,7 @@ There's a quick script to visualise the predicted vs actual labels of the valida
 
   * `python visualise_results.py`
 
+### Running in Google Colab
 
+There is a [sample ipython notebook](Nannotrain.ipynb) included which shows this project running in Colab and storing the resulting trained model on Google Drive. The notebook assumes you have a checkout of the project and have run the data and image scraper stages.
 
